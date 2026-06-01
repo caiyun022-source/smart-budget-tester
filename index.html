@@ -1,0 +1,1390 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no"/>
+<title>Smart Budget</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""/>
+<link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;500;700&family=Plus+Jakarta+Sans:wght@700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script>
+tailwind.config={darkMode:"class",theme:{extend:{
+colors:{
+  outline:"#9f8c8b","outline-variant":"#524342","surface":"#121416",primary:"#ffdddb",
+  "primary-fixed":"#ffdad7","primary-fixed-dim":"#fcb4b0","primary-container":"#ffb7b2",
+  "on-primary":"#502321","on-primary-fixed":"#360e0d","on-primary-container":"#7b4542",
+  "on-primary-fixed-variant":"#6b3836","inverse-primary":"#874f4c",
+  secondary:"#9ecede","secondary-fixed":"#baeafa","secondary-fixed-dim":"#9ecede",
+  "secondary-container":"#1a4d5a","on-secondary":"#003641",
+  "on-secondary-fixed":"#001f27","on-secondary-container":"#8dbccc","on-secondary-fixed-variant":"#1a4d5a",
+  tertiary:"#dceac5","tertiary-fixed":"#dae8c3","tertiary-fixed-dim":"#becba8",
+  "tertiary-container":"#c0ceab","on-tertiary":"#29341b",
+  "on-tertiary-fixed":"#141f08","on-tertiary-container":"#4c583c","on-tertiary-fixed-variant":"#3f4b30",
+  error:"#ffb4ab","on-error":"#690005","error-container":"#93000a","on-error-container":"#ffdad6",
+  "surface-variant":"#333537","surface-dim":"#121416","surface-bright":"#37393b",
+  "surface-container-lowest":"#0c0e10","surface-container-low":"#1a1c1e",
+  "surface-container":"#1e2022","surface-container-high":"#282a2c","surface-container-highest":"#333537",
+  "surface-tint":"#fcb4b0","on-surface":"#e2e2e5","on-surface-variant":"#d7c2c0",
+  "on-background":"#e2e2e5",background:"#121416",
+  "inverse-surface":"#e2e2e5","inverse-on-surface":"#2f3133",
+  eco:"#4ade80","eco-dim":"#22c55e","eco-soft":"rgba(74,222,128,0.12)",
+  carbon:"#fb923c","carbon-dim":"#f97316"
+},
+borderRadius:{DEFAULT:"1rem",lg:"2rem",xl:"3rem",full:"9999px"},
+spacing:{"card-gap":"20px",gutter:"16px","container-padding":"32px","section-margin":"40px",base:"8px"},
+fontFamily:{"body-md":["Nunito Sans"],"headline-lg-mobile":["Plus Jakarta Sans"],"label-lg":["Nunito Sans"],"body-lg":["Nunito Sans"],"headline-md":["Plus Jakarta Sans"]},
+fontSize:{"body-md":["16px",{lineHeight:"24px",fontWeight:"400"}],"headline-lg-mobile":["28px",{lineHeight:"36px",fontWeight:"700"}],"label-lg":["14px",{lineHeight:"20px",letterSpacing:"0.05em",fontWeight:"700"}],"body-lg":["18px",{lineHeight:"28px",fontWeight:"500"}],"headline-lg":["32px",{lineHeight:"40px",letterSpacing:"-0.02em",fontWeight:"700"}],"headline-md":["24px",{lineHeight:"32px",fontWeight:"700"}]}
+}}}
+</script>
+<style>
+.material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24}
+.icon-fill{font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24}
+.no-scrollbar::-webkit-scrollbar{display:none}
+.no-scrollbar{-ms-overflow-style:none;scrollbar-width:none}
+.screen{display:none}.screen.active{display:block}
+.sidebar-btn.active{background:rgba(255,183,178,.18);color:#ffdddb}
+@keyframes earthFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.earth-float{animation:earthFloat 4s ease-in-out infinite}
+@keyframes ecoPop{0%{opacity:0;transform:translate(-50%,-50%) scale(.5)}25%{opacity:1;transform:translate(-50%,-50%) scale(1.15)}50%{opacity:1;transform:translate(-50%,-60%) scale(1)}100%{opacity:0;transform:translate(-50%,-80%) scale(.8)}}
+.eco-pop{position:fixed;top:40%;left:50%;transform:translate(-50%,-50%);font-size:1.8rem;font-weight:800;z-index:999;pointer-events:none;animation:ecoPop .9s ease-out forwards}
+@keyframes rotate{to{transform:rotate(360deg)}}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:rotate .7s linear infinite;vertical-align:middle}
+.sheet-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;opacity:0;pointer-events:none;transition:opacity .3s}
+.sheet-overlay.open{opacity:1;pointer-events:auto}
+.bottom-sheet{position:fixed;bottom:0;left:50%;transform:translateX(-50%) translateY(100%);width:100%;max-width:560px;max-height:92vh;background:#1e2022;border-radius:24px 24px 0 0;padding:0 1.5rem 2rem;z-index:201;transition:transform .35s cubic-bezier(.32,.72,0,1);overflow-y:auto;border:1px solid #333537;border-bottom:0}
+.bottom-sheet.open{transform:translateX(-50%) translateY(0)}
+.cat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;max-height:220px;overflow-y:auto}
+.cat-btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 4px;background:#1a1c1e;border:2px solid transparent;border-radius:12px;color:#d7c2c0;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;text-align:center;line-height:1.2}
+.cat-btn:hover{border-color:#524342}
+.cat-btn.selected{border-color:#ffdddb;background:rgba(255,221,219,.08);color:#ffdddb}
+.cat-emoji{font-size:1.2rem;line-height:1}
+.c-dot{width:6px;height:6px;border-radius:50%;display:inline-block;flex-shrink:0}
+.c-green{background:#4ade80}.c-yellow{background:#fbbf24}.c-orange{background:#fb923c}.c-red{background:#f87171}
+#toast-wrap{position:fixed;top:5rem;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none;width:90%;max-width:400px}
+.toast{padding:12px 16px;border-radius:12px;font-size:14px;font-weight:600;color:#fff;box-shadow:0 8px 32px rgba(0,0,0,.4);pointer-events:auto;transition:opacity .3s,transform .3s}
+@media(max-width:1279px){.desktop-only{display:none!important}}
+@media(min-width:1280px){.mobile-only{display:none!important}}
+/* Budget manager styles */
+.budget-row{display:flex;align-items:center;gap:12px;padding:14px 16px;background:#1a1c1e;border:1px solid #333537;border-radius:14px;transition:background .15s}
+.budget-row:hover{background:#282a2c}
+/* Anomaly severity badges */
+.badge-high{background:rgba(255,180,171,.12);color:#ffb4ab;border:1px solid rgba(255,180,171,.25)}
+.badge-medium{background:rgba(251,146,60,.12);color:#fb923c;border:1px solid rgba(251,146,60,.25)}
+.badge-low{background:rgba(251,191,36,.12);color:#fbbf24;border:1px solid rgba(251,191,36,.25)}
+</style>
+</head>
+<body class="bg-background text-on-surface font-body-md antialiased min-h-screen selection:bg-primary selection:text-on-primary">
+<div class="flex w-full min-h-screen relative overflow-hidden bg-background">
+
+<!-- ═══ SIDEBAR (Desktop) ════════════════════════════════════════════════ -->
+<aside class="desktop-only w-[280px] bg-surface-container-low border-r border-surface-variant flex flex-col py-8 px-6 shrink-0 z-20 h-screen sticky top-0">
+  <div class="flex items-center gap-3 mb-12 px-2">
+    <div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-xl">🌿</div>
+    <h1 class="font-headline-md text-[22px] text-primary tracking-tight">Smart Budget</h1>
+  </div>
+  <nav class="flex flex-col gap-2 flex-1">
+    <button class="sidebar-btn active flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all" id="side-home" onclick="goScreen('home')">
+      <span class="material-symbols-outlined icon-fill">home</span><span class="text-[16px]">Dashboard</span>
+    </button>
+    <button class="sidebar-btn flex items-center gap-4 text-outline px-4 py-3 rounded-xl hover:bg-surface-variant transition-colors" id="side-analytics" onclick="goScreen('analytics')">
+      <span class="material-symbols-outlined">trending_up</span><span class="text-[16px] font-medium text-on-surface-variant">Analytics</span>
+    </button>
+    <button class="sidebar-btn flex items-center gap-4 text-outline px-4 py-3 rounded-xl hover:bg-surface-variant transition-colors" id="side-history" onclick="goScreen('history')">
+      <span class="material-symbols-outlined">receipt_long</span><span class="text-[16px] font-medium text-on-surface-variant">History</span>
+    </button>
+    <button class="sidebar-btn flex items-center gap-4 text-outline px-4 py-3 rounded-xl hover:bg-surface-variant transition-colors" id="side-eco" onclick="goScreen('eco')">
+      <span class="material-symbols-outlined">eco</span><span class="text-[16px] font-medium text-on-surface-variant">Eco Profile</span>
+    </button>
+  </nav>
+  <button onclick="openAddSheet()" class="mt-auto bg-primary text-on-primary font-bold py-4 px-4 rounded-xl flex items-center justify-center gap-3 shadow-[0_4px_20px_rgba(255,221,219,0.2)] hover:scale-[1.02] active:scale-95 transition-all duration-200">
+    <span class="material-symbols-outlined text-[24px]">add</span><span class="text-[16px]">Add Transaction</span>
+  </button>
+</aside>
+
+<!-- ═══ MAIN CONTENT ═════════════════════════════════════════════════════ -->
+<main class="flex-1 flex flex-col h-screen overflow-hidden">
+
+<!-- Top Header -->
+<header class="flex justify-between items-center w-full px-6 xl:px-container-padding py-5 bg-background z-10 shrink-0 border-b border-surface-variant/50">
+  <div class="flex items-center gap-3">
+    <div class="mobile-only w-8 h-8 rounded-full bg-primary-container flex items-center justify-center text-sm">🌿</div>
+    <h2 class="font-headline-lg text-headline-lg-mobile xl:text-headline-lg text-on-surface" id="page-title">Overview</h2>
+  </div>
+  <div class="flex items-center gap-3">
+    <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container-high text-sm font-bold" title="Streak">
+      🔥 <span id="streak-num">0</span>
+    </div>
+    <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container-high text-sm font-bold" id="ai-badge" title="AI Status">
+      <div class="w-2 h-2 rounded-full bg-surface-variant" id="ai-dot"></div>
+      <span id="ai-label" class="text-on-surface-variant text-[12px]">AI</span>
+    </div>
+  </div>
+</header>
+
+<!-- Scrollable Content -->
+<div class="flex-1 overflow-y-auto px-4 xl:px-container-padding pb-24 xl:pb-10 pt-6 no-scrollbar">
+
+<!-- ─── SCREEN: HOME ──────────────────────────────────────────────── -->
+<div id="screen-home" class="screen active">
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-8">
+<!-- Left Column -->
+<div class="xl:col-span-8 space-y-10">
+
+  <!-- Summary Card -->
+  <section class="bg-surface-container-high rounded-[32px] p-8 xl:p-10 relative overflow-hidden shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_12px_32px_rgba(0,0,0,0.4)]">
+    <div class="absolute top-[-100px] left-[-50px] w-80 h-80 bg-primary/10 rounded-full blur-[80px] pointer-events-none"></div>
+    <div class="absolute bottom-[-100px] right-[-50px] w-80 h-80 bg-secondary/10 rounded-full blur-[80px] pointer-events-none"></div>
+
+    <div class="flex flex-col md:flex-row items-center justify-center gap-8 xl:gap-12 w-full z-10 relative">
+      <!-- Earth Companion -->
+      <div class="relative flex flex-col items-center shrink-0">
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 rounded-full transition-all duration-500" id="earth-glow" style="background:radial-gradient(circle,rgba(74,222,128,.2),transparent 70%)"></div>
+        <div class="earth-float text-7xl relative z-10" id="earth-emoji">🌍</div>
+        <p class="text-sm font-medium mt-3 text-on-surface-variant transition-colors" id="earth-msg">Loading...</p>
+      </div>
+
+      <!-- Stats Bars -->
+      <div class="flex flex-col gap-5 flex-1 w-full">
+        <!-- Monthly Income Setting -->
+        <div class="flex items-center justify-between">
+          <span class="font-label-lg text-[14px] text-on-surface-variant">💵 Monthly Income</span>
+          <div class="flex items-center gap-2">
+            <span class="font-headline-md text-[20px] text-primary" id="income-display">$0</span>
+            <button onclick="toggleIncomeEdit()" class="w-7 h-7 rounded-full flex items-center justify-center hover:bg-surface-variant transition-colors" title="Edit income">
+              <span class="material-symbols-outlined text-[16px] text-on-surface-variant">edit</span>
+            </button>
+          </div>
+        </div>
+        <!-- Income Edit (hidden by default) — FIX: use style instead of hidden+flex conflict -->
+        <div id="income-editor" style="display:none" class="flex items-center gap-2 -mt-2">
+          <input type="number" id="income-input" placeholder="Monthly income" min="0" step="100" class="flex-1 bg-surface-container-lowest border border-surface-variant rounded-xl px-3 py-2 text-sm text-on-surface focus:border-primary focus:outline-none">
+          <button onclick="saveIncome()" class="bg-primary text-on-primary font-bold px-4 py-2 rounded-xl text-sm hover:scale-[1.02] active:scale-95 transition-all">Save</button>
+          <button onclick="toggleIncomeEdit()" class="text-on-surface-variant hover:text-on-surface px-2 py-2 rounded-xl text-sm transition-colors">✕</button>
+        </div>
+        <!-- Spent vs Income bar -->
+        <div class="flex flex-col gap-2">
+          <div class="flex justify-between items-end mb-1">
+            <span class="font-label-lg text-[14px] text-on-surface-variant">💰 Spent</span>
+            <span class="font-body-md text-[14px] text-on-surface" id="fin-label">$0 / $0</span>
+          </div>
+          <div class="h-4 w-full bg-surface-container rounded-full overflow-hidden shadow-[inset_0_1px_2px_rgba(0,0,0,0.5)] relative">
+            <div class="absolute top-0 left-0 h-full rounded-full transition-all duration-500" id="fin-fill" style="width:0%;background:#c0ceab"></div>
+          </div>
+        </div>
+        <!-- Eco Health bar -->
+        <div class="flex flex-col gap-2">
+          <div class="flex justify-between items-end mb-1">
+            <span class="font-label-lg text-[14px] text-on-surface-variant">🌿 Eco Health</span>
+            <span class="font-body-md text-[14px] text-on-surface" id="eco-label">0 / 750 kg</span>
+          </div>
+          <div class="h-4 w-full bg-surface-container rounded-full overflow-hidden shadow-[inset_0_1px_2px_rgba(0,0,0,0.5)] relative">
+            <div class="absolute top-0 left-0 h-full rounded-full transition-all duration-500" id="eco-fill" style="width:0%;background:#9ecede"></div>
+          </div>
+        </div>
+        <!-- Quick Stats -->
+        <div class="grid grid-cols-4 gap-3 mt-2">
+          <div class="bg-surface-container rounded-xl p-3 text-center border border-surface-variant">
+            <div class="font-headline-md text-[18px] text-tertiary" id="s-remaining">$0</div>
+            <div class="font-label-lg text-[10px] text-on-surface-variant mt-1">REMAINING</div>
+          </div>
+          <div class="bg-surface-container rounded-xl p-3 text-center border border-surface-variant">
+            <div class="font-headline-md text-[18px] text-primary" id="s-total">$0</div>
+            <div class="font-label-lg text-[10px] text-on-surface-variant mt-1">SPENT</div>
+          </div>
+          <div class="bg-surface-container rounded-xl p-3 text-center border border-surface-variant">
+            <div class="font-headline-md text-[18px] text-eco" id="s-carbon">0 kg</div>
+            <div class="font-label-lg text-[10px] text-on-surface-variant mt-1">CO₂e</div>
+          </div>
+          <div class="bg-surface-container rounded-xl p-3 text-center border border-surface-variant">
+            <div class="font-headline-md text-[18px] text-on-surface" id="s-count">0</div>
+            <div class="font-label-lg text-[10px] text-on-surface-variant mt-1">TXNS</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Eco Rank Card -->
+  <section class="bg-surface-container rounded-[24px] p-5 border border-surface-variant flex items-center justify-between shadow-[0_4px_12px_rgba(0,0,0,0.1)]">
+    <div class="flex items-center gap-4">
+      <span class="text-3xl" id="rank-emoji">🌱</span>
+      <div>
+        <div class="font-headline-md text-[18px] text-eco" id="rank-name">Seedling</div>
+        <div class="text-[13px] text-on-surface-variant" id="rank-sub">Keep logging to level up!</div>
+      </div>
+    </div>
+    <div class="text-right">
+      <div class="font-headline-md text-[24px] text-primary" id="eco-score">0</div>
+      <div class="font-label-lg text-[11px] text-on-surface-variant">eco pts</div>
+    </div>
+  </section>
+
+  <!-- Month Selector + Budget Bars -->
+  <section>
+    <div class="flex justify-between items-center mb-5">
+      <h3 class="font-headline-md text-[20px] font-bold text-on-surface">Budgets</h3>
+      <input type="month" id="dash-month" onchange="loadDashboard()" class="bg-surface-container-high border border-surface-variant rounded-xl px-3 py-2 text-sm text-on-surface focus:border-primary focus:outline-none">
+    </div>
+    <div id="budget-section" class="flex flex-col gap-5">
+      <div class="text-sm text-on-surface-variant">Loading...</div>
+    </div>
+  </section>
+</div>
+
+<!-- Right Column -->
+<div class="xl:col-span-4 space-y-5">
+
+  <!-- ✨ AI 分析卡片 -->
+  <section class="bg-surface-container rounded-[24px] p-6 border border-surface-variant shadow-[0_4px_12px_rgba(0,0,0,0.1)]">
+    <div class="flex items-center justify-between mb-4">
+      <div class="flex items-center gap-2">
+        <span class="text-lg">✨</span>
+        <h2 class="font-headline-md text-[18px] font-bold text-on-surface">AI 消費分析</h2>
+      </div>
+      <button id="ai-analysis-btn" onclick="runAiAnalysis()"
+        class="flex items-center gap-1.5 bg-primary/10 border border-primary/30 text-primary font-bold text-[13px] px-4 py-2 rounded-full hover:bg-primary/20 active:scale-95 transition-all">
+        <span class="material-symbols-outlined text-[15px]">auto_awesome</span>分析
+      </button>
+    </div>
+
+    <!-- 初始提示 -->
+    <div id="ai-analysis-idle" class="text-center py-5">
+      <div class="text-4xl mb-3 opacity-60">🤖</div>
+      <p class="text-[13px] text-on-surface-variant leading-relaxed">點擊「分析」讓 AI 解讀<br>你這個月的消費模式</p>
+    </div>
+
+    <!-- 載入中 -->
+    <div id="ai-analysis-loading" style="display:none" class="text-center py-6">
+      <div class="inline-block w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin mb-3"></div>
+      <p class="text-[13px] text-on-surface-variant" id="ai-loading-msg">AI 正在分析你的消費資料...</p>
+    </div>
+
+    <!-- 分析結果 -->
+    <div id="ai-analysis-result" style="display:none" class="space-y-4">
+      <!-- 報告文字 -->
+      <div class="bg-surface-container-high rounded-xl p-4 border border-surface-variant">
+        <p id="ai-analysis-text" class="text-[13px] text-on-surface-variant leading-relaxed"></p>
+        <div id="ai-powered-badge" class="mt-2 flex items-center gap-1 text-[11px] text-eco">
+          <span class="material-symbols-outlined text-[12px]">auto_awesome</span>
+          <span>Powered by Claude AI</span>
+        </div>
+      </div>
+      <!-- 快速數據摘要 -->
+      <div class="grid grid-cols-2 gap-2" id="ai-stats-grid"></div>
+      <!-- 類別佔比 Top 4 -->
+      <div id="ai-cat-breakdown" class="space-y-2"></div>
+      <!-- 重新分析 -->
+      <button onclick="runAiAnalysis()" class="w-full text-center text-[12px] text-on-surface-variant hover:text-primary py-1 rounded-xl hover:bg-primary/5 transition-colors">
+        ↺ 重新分析
+      </button>
+    </div>
+  </section>
+
+  <section class="bg-surface-container rounded-[24px] p-6 border border-surface-variant shadow-[0_4px_12px_rgba(0,0,0,0.1)]">
+    <div class="flex justify-between items-center mb-5">
+      <h2 class="font-headline-md text-[20px] font-bold text-on-surface">Recent Activity</h2>
+    </div>
+    <div id="recent-txs" class="space-y-3">
+      <div class="text-center py-8 text-on-surface-variant">
+        <div class="text-3xl mb-2 opacity-40">📦</div>No transactions yet
+      </div>
+    </div>
+    <button class="mt-4 w-full text-center font-label-lg text-[14px] text-primary hover:text-primary-fixed py-2 rounded-xl hover:bg-primary/10 transition-colors" onclick="goScreen('history')">See all →</button>
+  </section>
+  <div class="mt-4 text-center">
+    <button class="font-label-lg text-[13px] text-on-surface-variant hover:text-primary px-4 py-2 rounded-full hover:bg-surface-variant transition-colors" onclick="loadSeed()">📋 Load Demo Data</button>
+  </div>
+</div>
+</div>
+</div>
+
+<!-- ─── SCREEN: ANALYTICS ─────────────────────────────────────────── -->
+<div id="screen-analytics" class="screen">
+  <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+    <input type="month" id="ana-month" onchange="loadAnalytics()" class="bg-surface-container-high border border-surface-variant rounded-xl px-3 py-2 text-sm text-on-surface focus:border-primary focus:outline-none">
+    <div class="flex gap-2">
+      <button class="font-label-lg text-[13px] text-primary hover:bg-primary/10 px-4 py-2 rounded-full transition-colors" onclick="doExportCSV()">Export CSV</button>
+      <button class="font-label-lg text-[13px] text-primary hover:bg-primary/10 px-4 py-2 rounded-full transition-colors" id="gen-btn" onclick="generateReport()">✨ AI Report</button>
+    </div>
+  </div>
+  <!-- AI Report -->
+  <div id="report-card" class="bg-surface-container rounded-[24px] p-6 border border-surface-variant mb-6 hidden">
+    <h3 class="font-label-lg text-[14px] text-on-surface-variant uppercase mb-3">✨ AI Monthly Report</h3>
+    <p id="report-text" class="text-[15px] leading-relaxed text-on-surface-variant"></p>
+  </div>
+  <!-- Charts row 1 -->
+  <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
+    <div class="bg-surface-container rounded-[24px] p-6 border border-surface-variant">
+      <h3 class="font-label-lg text-[14px] text-on-surface-variant uppercase mb-4">📈 Daily Spending Trend</h3>
+      <div class="relative h-[220px]"><canvas id="trendChart"></canvas></div>
+    </div>
+    <div class="bg-surface-container rounded-[24px] p-6 border border-surface-variant">
+      <h3 class="font-label-lg text-[14px] text-on-surface-variant uppercase mb-4">📊 Spending by Category</h3>
+      <div class="relative h-[220px]"><canvas id="catChart"></canvas></div>
+    </div>
+  </div>
+  <!-- Carbon chart -->
+  <div class="bg-surface-container rounded-[24px] p-6 border border-surface-variant mb-6">
+    <h3 class="font-label-lg text-[14px] text-on-surface-variant uppercase mb-4">🌿 Carbon by Category (kg CO₂e)</h3>
+    <div class="relative h-[200px]"><canvas id="carbonChart"></canvas></div>
+  </div>
+  <!-- Emotion chart — NEW -->
+  <div class="bg-surface-container rounded-[24px] p-6 border border-surface-variant mb-6">
+    <h3 class="font-label-lg text-[14px] text-on-surface-variant uppercase mb-4">😊 Spending by Emotion</h3>
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 items-center">
+      <div class="relative h-[180px]"><canvas id="emotionChart"></canvas></div>
+      <div id="emotion-breakdown" class="space-y-3 text-sm"></div>
+    </div>
+  </div>
+  <!-- Equivalences -->
+  <div class="grid grid-cols-2 gap-4 mb-6">
+    <div class="bg-surface-container-high rounded-[20px] p-5 text-center border border-surface-variant">
+      <div class="text-3xl mb-2">🚗</div>
+      <div class="font-headline-md text-[20px] text-on-surface" id="eq-km">0 km</div>
+      <div class="font-label-lg text-[11px] text-on-surface-variant mt-1">of driving</div>
+    </div>
+    <div class="bg-surface-container-high rounded-[20px] p-5 text-center border border-surface-variant">
+      <div class="text-3xl mb-2">🌳</div>
+      <div class="font-headline-md text-[20px] text-on-surface" id="eq-trees">0</div>
+      <div class="font-label-lg text-[11px] text-on-surface-variant mt-1">trees needed / year</div>
+    </div>
+  </div>
+  <!-- ESG -->
+  <div class="bg-surface-container rounded-[24px] p-6 border border-surface-variant mb-6">
+    <h3 class="font-label-lg text-[14px] text-on-surface-variant uppercase mb-4">🌍 ESG: vs Taiwan Average</h3>
+    <div class="flex justify-between text-sm font-semibold mb-2">
+      <span class="text-on-surface-variant">Your carbon</span>
+      <span class="text-on-surface" id="esg-val">0 / 750 kg</span>
+    </div>
+    <div class="h-3 w-full bg-surface-container-lowest rounded-full overflow-hidden shadow-[inset_0_1px_2px_rgba(0,0,0,0.5)] relative">
+      <div class="absolute top-0 left-0 h-full rounded-full transition-all duration-500" id="esg-fill" style="width:0%;background:#c0ceab"></div>
+    </div>
+    <div class="text-[12px] text-on-surface-variant mt-2 text-right">ⓘ Taiwan avg: 750 kg CO₂e / month</div>
+  </div>
+  <!-- Anomaly Detection — NEW -->
+  <div class="bg-surface-container rounded-[24px] p-6 border border-surface-variant">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="font-label-lg text-[14px] text-on-surface-variant uppercase">🔍 Anomaly Detection</h3>
+      <button onclick="loadAnomalies()" class="font-label-lg text-[12px] text-primary hover:bg-primary/10 px-3 py-1 rounded-full transition-colors">Refresh</button>
+    </div>
+    <div id="anomaly-summary" class="text-[13px] text-on-surface-variant mb-3"></div>
+    <div id="anomaly-list" class="space-y-2">
+      <div class="text-sm text-on-surface-variant">Click Refresh to analyse spending patterns.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── SCREEN: HISTORY ───────────────────────────────────────────── -->
+<div id="screen-history" class="screen">
+  <div class="flex flex-wrap items-center gap-3 mb-4">
+    <div class="flex-1 min-w-[200px]">
+      <div class="relative">
+        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[20px]">search</span>
+        <input type="text" id="h-q" placeholder="Search transactions..." oninput="debouncedSearch()" class="w-full bg-surface-container-high border border-surface-variant rounded-xl pl-10 pr-4 py-3 text-sm text-on-surface placeholder-outline focus:border-primary focus:outline-none">
+      </div>
+    </div>
+    <input type="month" id="hist-month" onchange="doSearch()" class="bg-surface-container-high border border-surface-variant rounded-xl px-3 py-3 text-sm text-on-surface focus:border-primary focus:outline-none">
+  </div>
+  <!-- Category Filter Chips -->
+  <div class="flex gap-2 overflow-x-auto no-scrollbar pb-3 mb-3" id="filter-cats"></div>
+  <div class="flex justify-between items-center mb-4">
+    <span id="h-count" class="text-sm text-on-surface-variant">—</span>
+    <button class="font-label-lg text-[13px] text-primary hover:bg-primary/10 px-3 py-1 rounded-full transition-colors" onclick="clearFilters()">Clear</button>
+  </div>
+  <div id="h-list" class="space-y-3">
+    <div class="text-center py-8 text-on-surface-variant"><div class="text-3xl mb-2 opacity-40">📋</div>Loading...</div>
+  </div>
+</div>
+
+<!-- ─── SCREEN: ECO ───────────────────────────────────────────────── -->
+<div id="screen-eco" class="screen">
+  <!-- Earth Large -->
+  <div class="text-center py-8 relative">
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[55%] w-48 h-48 rounded-full transition-all duration-500" id="eco-earth-glow" style="background:radial-gradient(circle,rgba(74,222,128,.2),transparent 70%)"></div>
+    <div class="earth-float text-8xl relative z-10" id="eco-earth-emoji">🌍</div>
+    <p class="text-sm font-medium mt-4 text-on-surface-variant" id="eco-earth-msg">Loading...</p>
+  </div>
+  <!-- Carbon Time Periods -->
+  <div class="grid grid-cols-3 gap-3 mb-6">
+    <div class="bg-surface-container rounded-xl p-4 text-center border border-surface-variant">
+      <div class="font-headline-md text-[20px] text-eco" id="eco-today">0</div>
+      <div class="font-label-lg text-[11px] text-on-surface-variant mt-1">TODAY (kg)</div>
+    </div>
+    <div class="bg-surface-container rounded-xl p-4 text-center border border-surface-variant">
+      <div class="font-headline-md text-[20px] text-[#fbbf24]" id="eco-week">0</div>
+      <div class="font-label-lg text-[11px] text-on-surface-variant mt-1">THIS WEEK</div>
+    </div>
+    <div class="bg-surface-container rounded-xl p-4 text-center border border-surface-variant">
+      <div class="font-headline-md text-[20px] text-carbon" id="eco-month">0</div>
+      <div class="font-label-lg text-[11px] text-on-surface-variant mt-1">THIS MONTH</div>
+    </div>
+  </div>
+  <!-- Rank Progress -->
+  <div class="bg-surface-container rounded-[24px] p-6 border border-surface-variant mb-6">
+    <h3 class="font-label-lg text-[14px] text-on-surface-variant uppercase mb-4">🏆 Rank Progress</h3>
+    <div class="flex items-center justify-between mb-3">
+      <div class="flex items-center gap-3">
+        <span class="text-2xl" id="eco-rank-emoji">🌱</span>
+        <span class="font-bold text-on-surface" id="eco-rank-name"></span>
+      </div>
+      <span class="text-sm text-on-surface-variant" id="eco-rank-pts"></span>
+    </div>
+    <div class="h-3 bg-surface-container-lowest rounded-full overflow-hidden shadow-[inset_0_1px_2px_rgba(0,0,0,0.5)]">
+      <div class="h-full rounded-full bg-eco transition-all duration-500" id="rank-fill" style="width:0%"></div>
+    </div>
+    <div class="text-sm text-on-surface-variant mt-2" id="rank-progress-lbl"></div>
+    <div class="text-[12px] text-outline mt-3">🌱 Seedling (0) → 🌿 Sprout (50) → 🌳 Guardian (150) → 🌍 Earth Protector (300)</div>
+  </div>
+
+  <!-- Budget Manager — NEW full CRUD UI -->
+  <div class="bg-surface-container rounded-[24px] p-6 border border-surface-variant mb-6">
+    <div class="flex items-center justify-between mb-5">
+      <h3 class="font-label-lg text-[14px] text-on-surface-variant uppercase">💰 Budget Manager</h3>
+      <button onclick="toggleBudgetForm()" class="flex items-center gap-1.5 bg-primary/10 border border-primary/30 text-primary font-bold text-[13px] px-4 py-2 rounded-full hover:bg-primary/20 transition-colors">
+        <span class="material-symbols-outlined text-[16px]">add</span> Add Budget
+      </button>
+    </div>
+    <!-- Add / Edit Budget Form -->
+    <div id="budget-form" style="display:none" class="bg-surface-container-high rounded-xl p-4 mb-5 border border-surface-variant">
+      <div class="text-[13px] font-bold text-on-surface mb-3" id="budget-form-title">New Budget</div>
+      <div class="grid grid-cols-1 gap-3">
+        <div>
+          <label class="font-label-lg text-[11px] text-on-surface-variant uppercase block mb-1">Category</label>
+          <select id="budget-cat-select" class="w-full bg-surface-container-lowest border border-surface-variant rounded-xl px-3 py-2 text-sm text-on-surface focus:border-primary focus:outline-none"></select>
+        </div>
+        <div>
+          <label class="font-label-lg text-[11px] text-on-surface-variant uppercase block mb-1">Monthly Limit (TWD)</label>
+          <input type="number" id="budget-limit-input" placeholder="e.g. 800" min="1" step="50" class="w-full bg-surface-container-lowest border border-surface-variant rounded-xl px-3 py-2 text-sm text-on-surface focus:border-primary focus:outline-none">
+        </div>
+      </div>
+      <div class="flex gap-2 mt-3">
+        <button onclick="saveBudget()" class="flex-1 bg-primary text-on-primary font-bold py-2 rounded-xl text-sm hover:scale-[1.01] active:scale-95 transition-all">Save</button>
+        <button onclick="toggleBudgetForm(false)" class="text-on-surface-variant hover:text-on-surface px-4 py-2 rounded-xl text-sm border border-surface-variant transition-colors">Cancel</button>
+      </div>
+    </div>
+    <!-- Budget List -->
+    <div id="budget-mgr-list" class="space-y-3">
+      <div class="text-sm text-on-surface-variant text-center py-4">Loading budgets...</div>
+    </div>
+  </div>
+
+  <!-- Methodology -->
+  <div class="bg-surface-container rounded-[24px] p-6 border border-surface-variant">
+    <h3 class="font-label-lg text-[14px] text-on-surface-variant uppercase mb-3">ⓘ How Carbon is Calculated</h3>
+    <div class="text-[13px] text-on-surface-variant leading-relaxed space-y-1">
+      <p><strong class="text-on-surface">Method:</strong> GHG Protocol Scope 3 spend-based methodology.</p>
+      <p><strong class="text-on-surface">Formula:</strong> carbon_kg = amount (TWD) × emission_factor (kg CO₂e/TWD)</p>
+      <p><strong class="text-on-surface">Electricity:</strong> Taiwan avg price (3.5 TWD/kWh) × EPA grid factor (0.495 kg CO₂e/kWh).</p>
+      <p><strong class="text-on-surface">Source:</strong> EU consumption emission factors, converted at 1 EUR ≈ 35 TWD.</p>
+    </div>
+  </div>
+</div>
+
+</div><!-- end scrollable -->
+</main>
+</div><!-- end flex -->
+
+<!-- ═══ BOTTOM NAV (Mobile) ══════════════════════════════════════════════ -->
+<nav class="mobile-only fixed bottom-0 left-0 right-0 h-[68px] bg-surface-container-low border-t border-surface-variant flex items-center justify-around z-50 px-2">
+  <button class="nav-btn active flex flex-col items-center gap-1 px-4 py-2 text-[11px] font-semibold transition-colors" id="nav-home" onclick="goScreen('home')">
+    <span class="material-symbols-outlined icon-fill text-[22px]">home</span>Home
+  </button>
+  <button class="nav-btn flex flex-col items-center gap-1 px-4 py-2 text-[11px] font-semibold text-outline transition-colors" id="nav-analytics" onclick="goScreen('analytics')">
+    <span class="material-symbols-outlined text-[22px]">trending_up</span>Stats
+  </button>
+  <button onclick="openAddSheet()" class="w-14 h-14 rounded-full bg-primary text-on-primary font-bold text-2xl -mt-6 shadow-[0_4px_20px_rgba(255,221,219,0.3)] active:scale-90 transition-transform flex items-center justify-center">+</button>
+  <button class="nav-btn flex flex-col items-center gap-1 px-4 py-2 text-[11px] font-semibold text-outline transition-colors" id="nav-history" onclick="goScreen('history')">
+    <span class="material-symbols-outlined text-[22px]">receipt_long</span>History
+  </button>
+  <button class="nav-btn flex flex-col items-center gap-1 px-4 py-2 text-[11px] font-semibold text-outline transition-colors" id="nav-eco" onclick="goScreen('eco')">
+    <span class="material-symbols-outlined text-[22px]">eco</span>Eco
+  </button>
+</nav>
+
+<!-- ═══ ADD TRANSACTION SHEET ════════════════════════════════════════════ -->
+<div class="sheet-overlay" id="sheet-overlay" onclick="closeAddSheet()"></div>
+<div class="bottom-sheet" id="add-sheet">
+  <div class="w-9 h-1 bg-surface-variant rounded-full mx-auto mt-3 mb-5"></div>
+  <h3 class="font-headline-md text-[20px] font-bold text-on-surface mb-5">Add Transaction</h3>
+  <div class="mb-4">
+    <label class="font-label-lg text-[12px] text-on-surface-variant uppercase block mb-2">Describe your expense</label>
+    <textarea id="nlp-text" rows="2" placeholder='e.g. "Lunch at MOS Burger 180, feeling stressed"' class="w-full bg-surface-container-lowest border border-surface-variant rounded-xl px-4 py-3 text-sm text-on-surface placeholder-outline focus:border-primary focus:outline-none resize-none"></textarea>
+  </div>
+  <button id="parse-btn" onclick="doParse()" class="w-full border border-dashed border-outline rounded-xl py-3 text-sm font-semibold text-primary hover:bg-primary/5 transition-colors mb-4">✨ Parse with AI</button>
+  <div class="text-center text-[12px] text-outline mb-4">— or fill manually —</div>
+  <div class="mb-4">
+    <label class="font-label-lg text-[12px] text-on-surface-variant uppercase block mb-2">Amount (TWD)</label>
+    <input type="number" id="add-amount" placeholder="0" min="0" step="1" oninput="updateCarbonEst()" class="w-full bg-surface-container-lowest border border-surface-variant rounded-xl px-4 py-3 text-sm text-on-surface focus:border-primary focus:outline-none">
+  </div>
+  <div class="mb-4">
+    <label class="font-label-lg text-[12px] text-on-surface-variant uppercase block mb-2">Category</label>
+    <div class="cat-grid" id="cat-grid"></div>
+  </div>
+  <div class="mb-4">
+    <label class="font-label-lg text-[12px] text-on-surface-variant uppercase block mb-2">Date</label>
+    <input type="date" id="add-date" class="w-full bg-surface-container-lowest border border-surface-variant rounded-xl px-4 py-3 text-sm text-on-surface focus:border-primary focus:outline-none">
+  </div>
+  <div class="mb-4">
+    <label class="font-label-lg text-[12px] text-on-surface-variant uppercase block mb-2">Note</label>
+    <input type="text" id="add-note" placeholder="Optional description" class="w-full bg-surface-container-lowest border border-surface-variant rounded-xl px-4 py-3 text-sm text-on-surface placeholder-outline focus:border-primary focus:outline-none">
+  </div>
+  <!-- Context Tag — NEW -->
+  <div class="mb-4">
+    <label class="font-label-lg text-[12px] text-on-surface-variant uppercase block mb-2">Context Tag</label>
+    <div class="flex gap-2 flex-wrap" id="ctx-chips">
+      <button class="ctx-chip px-3 py-1.5 rounded-full text-[12px] font-semibold border border-surface-variant text-on-surface-variant hover:border-outline transition-colors" data-ctx="none" onclick="setCtxTag(this)">None</button>
+      <button class="ctx-chip px-3 py-1.5 rounded-full text-[12px] font-semibold border border-surface-variant text-on-surface-variant hover:border-outline transition-colors" data-ctx="social" onclick="setCtxTag(this)">🎉 Social</button>
+      <button class="ctx-chip px-3 py-1.5 rounded-full text-[12px] font-semibold border border-surface-variant text-on-surface-variant hover:border-outline transition-colors" data-ctx="work-related" onclick="setCtxTag(this)">💼 Work</button>
+      <button class="ctx-chip px-3 py-1.5 rounded-full text-[12px] font-semibold border border-surface-variant text-on-surface-variant hover:border-outline transition-colors" data-ctx="study-related" onclick="setCtxTag(this)">📚 Study</button>
+      <button class="ctx-chip px-3 py-1.5 rounded-full text-[12px] font-semibold border border-surface-variant text-on-surface-variant hover:border-outline transition-colors" data-ctx="health-related" onclick="setCtxTag(this)">🏃 Health</button>
+    </div>
+  </div>
+  <div class="mb-4">
+    <label class="font-label-lg text-[12px] text-on-surface-variant uppercase block mb-2">Mood</label>
+    <div class="flex gap-2">
+      <button class="mood-chip px-4 py-2 rounded-full text-sm font-semibold border border-surface-variant text-on-surface-variant transition-colors" data-em="positive" onclick="setEmotion(this)">😊 Happy</button>
+      <button class="mood-chip active px-4 py-2 rounded-full text-sm font-semibold border border-primary bg-primary/10 text-primary transition-colors" data-em="neutral" onclick="setEmotion(this)">😐 Neutral</button>
+      <button class="mood-chip px-4 py-2 rounded-full text-sm font-semibold border border-surface-variant text-on-surface-variant transition-colors" data-em="negative" onclick="setEmotion(this)">😟 Stressed</button>
+    </div>
+  </div>
+  <div class="rounded-xl p-4 mb-5 text-sm font-semibold flex items-center gap-2 transition-colors border" id="carbon-est" style="background:rgba(74,222,128,.08);border-color:rgba(74,222,128,.2);color:#4ade80">
+    🌿 Estimated carbon: <strong id="est-val">0.00</strong> kg CO₂e
+  </div>
+  <button onclick="saveTransaction()" class="w-full bg-primary text-on-primary font-bold py-4 rounded-xl shadow-[0_4px_20px_rgba(255,221,219,0.2)] hover:scale-[1.01] active:scale-95 transition-all duration-200 text-[16px]">
+    💾 Save Transaction
+  </button>
+</div>
+
+<div id="toast-wrap"></div>
+
+<!-- ═══ JAVASCRIPT ═══════════════════════════════════════════════════════ -->
+<script>
+'use strict';
+const CUR_MONTH = new Date().toISOString().slice(0,7);
+const TODAY     = new Date().toISOString().slice(0,10);
+
+// Populated from /api/categories on load
+let CATS = {
+  "Car & Fuel":"🚗","Public Transport":"🚌","Taxi & Rideshare":"🚕","Flight":"✈️",
+  "Meat & Dairy":"🥩","Groceries":"🥦","Restaurant":"🍽️","Cafe & Drinks":"☕",
+  "Seafood":"🐟","Fashion":"👗","Electronics":"📱","Books & Stationery":"📚",
+  "Beauty & Personal":"💄","Furniture & Home":"🏠","Electricity":"⚡","Water":"💧",
+  "Gas":"🔥","Rent & Housing":"🏘️","Streaming & Software":"📺","Education":"🎓",
+  "Healthcare":"🏥","Entertainment":"🎬","Insurance":"🛡️","Other":"📦"
+};
+let CARBON_FACTORS = {
+  "Car & Fuel":.12,"Public Transport":.012,"Taxi & Rideshare":.06,"Flight":.28,
+  "Meat & Dairy":.09,"Groceries":.01,"Restaurant":.055,"Cafe & Drinks":.04,
+  "Seafood":.07,"Fashion":.08,"Electronics":.1,"Books & Stationery":.008,
+  "Beauty & Personal":.045,"Furniture & Home":.06,"Electricity":.095,"Water":.005,
+  "Gas":.11,"Rent & Housing":.02,"Streaming & Software":.015,"Education":.008,
+  "Healthcare":.025,"Entertainment":.03,"Insurance":.01,"Other":.04
+};
+
+const CAT_COLORS = {
+  "Car & Fuel":"#f87171","Public Transport":"#4ade80","Taxi & Rideshare":"#fb923c",
+  "Flight":"#ef4444","Meat & Dairy":"#f97316","Groceries":"#22c55e","Restaurant":"#fbbf24",
+  "Cafe & Drinks":"#a78bfa","Seafood":"#38bdf8","Fashion":"#f472b6","Electronics":"#818cf8",
+  "Books & Stationery":"#67e8f9","Beauty & Personal":"#e879f9","Furniture & Home":"#94a3b8",
+  "Electricity":"#facc15","Water":"#22d3ee","Gas":"#fb923c","Rent & Housing":"#a1a1aa",
+  "Streaming & Software":"#c084fc","Education":"#60a5fa","Healthcare":"#34d399",
+  "Entertainment":"#fb7185","Insurance":"#9ca3af","Other":"#6b7280"
+};
+
+const TITLES = {home:'Overview',analytics:'Analytics',history:'History',eco:'Eco Profile'};
+
+let selectedCat='Restaurant', selectedEmotion='neutral', selectedCtx='none';
+let catChart=null, trendChart=null, carbonChart=null, emotionChart=null;
+let searchTimer=null;
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+  document.getElementById('dash-month').value = CUR_MONTH;
+  document.getElementById('ana-month').value  = CUR_MONTH;
+  document.getElementById('add-date').value   = TODAY;
+
+  // Load categories from backend (sync CATS & CARBON_FACTORS)
+  try {
+    const cats = await api('/api/categories');
+    CATS = {};
+    CARBON_FACTORS = {};
+    for (const [name, info] of Object.entries(cats)) {
+      CATS[name] = info.icon;
+      CARBON_FACTORS[name] = info.factor;
+    }
+  } catch (_) {}
+
+  buildCatGrid();
+  buildFilterChips();
+  populateBudgetCatSelect();
+  checkAI();
+  loadDashboard();
+});
+
+// ── Utilities ─────────────────────────────────────────────────────────────────
+async function api(url, opts={}) {
+  const r = await fetch(url, opts);
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  return r.json();
+}
+
+async function checkAI() {
+  try {
+    const { ai_enabled } = await api('/api/status');
+    const dot   = document.getElementById('ai-dot');
+    const label = document.getElementById('ai-label');
+    dot.className   = 'w-2 h-2 rounded-full ' + (ai_enabled ? 'bg-eco' : 'bg-surface-variant');
+    label.textContent = ai_enabled ? 'AI On' : 'AI Off';
+    label.className   = 'text-[12px] ' + (ai_enabled ? 'text-eco' : 'text-on-surface-variant');
+  } catch(_) {}
+}
+
+function fmt(n) { return Number(n).toFixed(0); }
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function carbonDotClass(kg) { return kg<.05?'c-green':kg<.5?'c-yellow':kg<2?'c-orange':'c-red'; }
+
+function toast(msg, type='info') {
+  const colors = {success:'#059669',error:'#93000a',warn:'#d97706',info:'#1a4d5a'};
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.style.background = colors[type] || colors.info;
+  el.textContent = msg;
+  document.getElementById('toast-wrap').appendChild(el);
+  setTimeout(() => { el.style.opacity='0'; el.style.transform='translateY(-8px)'; setTimeout(()=>el.remove(),300); }, 2500);
+}
+
+function showEcoPop(msg, color) {
+  const el = document.createElement('div');
+  el.className = 'eco-pop';
+  el.style.color = color;
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 1000);
+}
+
+// ── Navigation ────────────────────────────────────────────────────────────────
+function goScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => {
+    b.classList.remove('active'); b.classList.add('text-outline');
+    b.querySelector('.material-symbols-outlined')?.classList.remove('icon-fill');
+  });
+  document.querySelectorAll('.sidebar-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+
+  const mnav = document.getElementById('nav-' + name);
+  if (mnav) { mnav.classList.add('active'); mnav.classList.remove('text-outline'); mnav.querySelector('.material-symbols-outlined')?.classList.add('icon-fill'); }
+  const snav = document.getElementById('side-' + name);
+  if (snav) snav.classList.add('active');
+
+  document.getElementById('page-title').textContent = TITLES[name] || 'Overview';
+  if (name === 'analytics') loadAnalytics();
+  if (name === 'history')   doSearch();
+  if (name === 'eco')       loadEcoScreen();
+  document.querySelector('.overflow-y-auto')?.scrollTo(0,0);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  DASHBOARD
+// ═══════════════════════════════════════════════════════════════════════════════
+async function loadDashboard() {
+  const month = document.getElementById('dash-month').value || CUR_MONTH;
+  try {
+    const [stats, eco, carbon, incomeData, budgets] = await Promise.all([
+      api(`/api/stats/monthly?month=${month}`),
+      api(`/api/carbon/eco-score?month=${month}`),
+      api(`/api/carbon/summary?month=${month}`),
+      api('/api/settings/income'),
+      api(`/api/budgets?month=${month}`),
+    ]);
+
+    const income    = incomeData.monthly_income || 0;
+    const remaining = Math.max(0, income - stats.total);
+
+    document.getElementById('income-display').textContent = '$' + fmt(income);
+    document.getElementById('income-input').value = income || '';
+    document.getElementById('s-total').textContent = '$' + fmt(stats.total);
+    document.getElementById('s-remaining').textContent = '$' + fmt(remaining);
+    document.getElementById('s-remaining').style.color = remaining > 0 ? '#dceac5' : '#ffb4ab';
+    document.getElementById('s-carbon').textContent = carbon.total_month.toFixed(1) + ' kg';
+    document.getElementById('s-count').textContent = stats.count;
+    document.getElementById('streak-num').textContent = eco.streak;
+
+    updateEarth(eco);
+    document.getElementById('rank-emoji').textContent = eco.rank_emoji;
+    document.getElementById('rank-name').textContent  = eco.rank;
+    document.getElementById('eco-score').textContent  = eco.eco_score;
+    document.getElementById('rank-sub').textContent   = eco.next_rank_at
+      ? `${eco.next_rank_at - eco.eco_score} pts to next rank`
+      : 'Max rank achieved! 🎉';
+
+    const cc = eco.monthly_carbon < 300 ? 'text-eco'
+             : eco.monthly_carbon < 600 ? 'text-[#fbbf24]'
+             : eco.monthly_carbon < 900 ? 'text-carbon' : 'text-error';
+    document.getElementById('s-carbon').className = 'font-headline-md text-[18px] ' + cc;
+
+    // Financial progress bar
+    const finTotal = income > 0 ? income : (budgets.reduce((s,b) => s + b.monthly_limit, 0) || 1);
+    const finPct   = Math.min(100, stats.total / finTotal * 100);
+    document.getElementById('fin-fill').style.width      = finPct + '%';
+    document.getElementById('fin-fill').style.background = finPct < 70 ? '#c0ceab' : finPct < 90 ? '#e8d284' : '#ffb4ab';
+    document.getElementById('fin-label').textContent     = `$${fmt(stats.total)} / $${fmt(finTotal)}`;
+
+    // Eco progress bar
+    const ecoPct = Math.min(100, eco.monthly_carbon / eco.taiwan_avg * 100);
+    document.getElementById('eco-fill').style.width      = ecoPct + '%';
+    document.getElementById('eco-fill').style.background = ecoPct < 40 ? '#9ecede' : ecoPct < 70 ? '#e8d284' : ecoPct < 90 ? '#fb923c' : '#ffb4ab';
+    document.getElementById('eco-label').textContent     = `${eco.monthly_carbon.toFixed(1)} / ${eco.taiwan_avg} kg`;
+
+    renderBudgetBars(budgets, 'budget-section');
+    loadRecentTxs(month);
+  } catch(e) { console.error(e); }
+}
+
+function renderBudgetBars(budgets, containerId) {
+  const c = document.getElementById(containerId);
+  if (!budgets.length) { c.innerHTML = '<div class="text-sm text-on-surface-variant">No budgets set yet.</div>'; return; }
+  const colors = ['#c0ceab','#9ecede','#ffb7b2','#e8d284','#becba8','#fcb4b0','#8dbccc','#dceac5'];
+  c.innerHTML = budgets.map((b,i) => {
+    const pct = Math.min(b.percentage, 100);
+    const clr = b.percentage > 90 ? '#ffb4ab' : colors[i % colors.length];
+    return `<div class="flex flex-col gap-2">
+      <div class="flex justify-between items-end mb-1">
+        <span class="text-[15px] text-on-surface font-semibold">${esc(b.category)}</span>
+        <span class="font-label-lg text-[13px] text-on-surface-variant">${b.percentage > 100 ? '⚠️ Over' : '$' + fmt(b.monthly_limit - b.spent) + ' Left'}</span>
+      </div>
+      <div class="h-6 w-full bg-surface-container rounded-full overflow-hidden shadow-[inset_0_1px_2px_rgba(0,0,0,0.5)] relative">
+        <div class="absolute top-0 left-0 h-full rounded-full flex items-center px-3 transition-all duration-500" style="width:${pct}%;background:${clr}">
+          <span class="font-label-lg text-[12px] text-[#121416] whitespace-nowrap">$${fmt(b.spent)} of $${fmt(b.monthly_limit)}</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function updateEarth(eco) {
+  const emojis = {thriving:'🌍',neutral:'🌏',stressed:'🌎',critical:'🌫️'};
+  const glows  = {
+    thriving:'radial-gradient(circle,rgba(74,222,128,.2),transparent 70%)',
+    neutral: 'radial-gradient(circle,rgba(251,191,36,.18),transparent 70%)',
+    stressed:'radial-gradient(circle,rgba(251,146,60,.18),transparent 70%)',
+    critical:'radial-gradient(circle,rgba(148,163,178,.15),transparent 70%)'
+  };
+  ['earth-emoji','eco-earth-emoji'].forEach(id => { const el=document.getElementById(id); if(el) el.textContent=emojis[eco.earth_state]||'🌍'; });
+  ['earth-glow','eco-earth-glow'].forEach(id  => { const el=document.getElementById(id); if(el) el.style.background=glows[eco.earth_state]||glows.thriving; });
+  ['earth-msg','eco-earth-msg'].forEach(id    => { const el=document.getElementById(id); if(el){ el.textContent=eco.earth_message; el.style.color=eco.earth_color; } });
+}
+
+async function loadRecentTxs(month) {
+  try {
+    const exps = await api(`/api/expenses?month=${month}`);
+    const c = document.getElementById('recent-txs');
+    if (!exps.length) { c.innerHTML='<div class="text-center py-8 text-on-surface-variant"><div class="text-3xl mb-2 opacity-40">📦</div>No transactions yet.<br>Tap + to add one!</div>'; return; }
+    c.innerHTML = exps.slice(0,6).map(txCard).join('');
+  } catch(_) {}
+}
+
+function txCard(e) {
+  const icon = CATS[e.category] || '📦';
+  const cd   = carbonDotClass(e.carbon_kg);
+  return `<div class="flex items-center justify-between p-4 bg-surface-container-highest rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.2)] hover:bg-surface-bright transition-colors cursor-pointer active:scale-[0.98]">
+    <div class="flex items-center gap-4">
+      <div class="w-11 h-11 rounded-full bg-surface-container-low flex items-center justify-center text-[18px] border border-surface-variant shrink-0">${icon}</div>
+      <div class="flex flex-col min-w-0">
+        <span class="text-[15px] text-on-surface font-semibold truncate max-w-[160px]">${esc(e.description || e.category)}</span>
+        <span class="font-label-lg text-[12px] text-on-surface-variant font-normal">${e.date}</span>
+      </div>
+    </div>
+    <div class="text-right shrink-0 ml-3">
+      <div class="font-headline-md text-[16px] text-on-surface">-$${fmt(e.amount)}</div>
+      <div class="flex items-center gap-1 justify-end text-[11px] text-on-surface-variant"><span class="c-dot ${cd}"></span>${e.carbon_kg.toFixed(2)}kg</div>
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  ANALYTICS
+// ═══════════════════════════════════════════════════════════════════════════════
+async function loadAnalytics() {
+  const month = document.getElementById('ana-month').value || CUR_MONTH;
+  try {
+    const [stats, carbon, emotionStats] = await Promise.all([
+      api(`/api/stats/monthly?month=${month}`),
+      api(`/api/carbon/summary?month=${month}`),
+      api(`/api/stats/emotion?month=${month}`),
+    ]);
+    renderTrendChart(stats.by_day);
+    renderCatChart(stats.by_category);
+    renderCarbonChart(carbon.by_category);
+    renderEmotionChart(emotionStats);
+
+    document.getElementById('eq-km').textContent    = carbon.equivalences.driving_km.toLocaleString() + ' km';
+    document.getElementById('eq-trees').textContent = carbon.equivalences.trees_needed.toFixed(1);
+
+    const tw  = 750, pct = Math.min(150, carbon.total_month / tw * 100);
+    document.getElementById('esg-fill').style.width      = Math.min(pct, 100) + '%';
+    document.getElementById('esg-fill').style.background = pct < 40 ? '#c0ceab' : pct < 70 ? '#e8d284' : pct < 100 ? '#fb923c' : '#ffb4ab';
+    document.getElementById('esg-val').textContent       = `${carbon.total_month.toFixed(1)} / ${tw} kg`;
+  } catch(e) { console.error(e); }
+}
+
+const chartOpts = { grid:'rgba(51,53,55,.6)', text:'#9f8c8b', line:'#fcb4b0', lineBg:'rgba(252,180,176,.1)' };
+
+function renderTrendChart(byDay) {
+  const labels = Object.keys(byDay).map(d => d.slice(8));
+  const values = Object.values(byDay);
+  if (trendChart) { trendChart.data.labels=labels; trendChart.data.datasets[0].data=values; trendChart.update(); return; }
+  trendChart = new Chart(document.getElementById('trendChart'), {
+    type:'line',
+    data:{labels, datasets:[{label:'Daily $',data:values,borderColor:chartOpts.line,backgroundColor:chartOpts.lineBg,fill:true,tension:.4,pointRadius:1.5,pointHoverRadius:4,borderWidth:2}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:10,font:{size:10},color:chartOpts.text}},y:{beginAtZero:true,ticks:{callback:v=>'$'+v,font:{size:10},color:chartOpts.text},grid:{color:chartOpts.grid}}}}
+  });
+}
+
+function renderCatChart(data) {
+  const labels = Object.keys(data), values = Object.values(data);
+  const colors = labels.map(l => CAT_COLORS[l] || '#6b7280');
+  if (catChart) { catChart.data.labels=labels; catChart.data.datasets[0].data=values; catChart.data.datasets[0].backgroundColor=colors; catChart.update(); return; }
+  catChart = new Chart(document.getElementById('catChart'), {
+    type:'doughnut',
+    data:{labels, datasets:[{data:values, backgroundColor:colors, borderWidth:0}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:10},color:'#d7c2c0',padding:8,boxWidth:10}},tooltip:{callbacks:{label:c=>` ${c.label}: $${fmt(c.raw)}`}}}}
+  });
+}
+
+function renderCarbonChart(data) {
+  const sorted = Object.entries(data).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const labels = sorted.map(s=>s[0]), values = sorted.map(s=>s[1]);
+  const colors = labels.map(l => CAT_COLORS[l] || '#6b7280');
+  if (carbonChart) { carbonChart.data.labels=labels; carbonChart.data.datasets[0].data=values; carbonChart.data.datasets[0].backgroundColor=colors; carbonChart.update(); return; }
+  carbonChart = new Chart(document.getElementById('carbonChart'), {
+    type:'bar',
+    data:{labels, datasets:[{label:'kg CO₂e',data:values,backgroundColor:colors,borderRadius:6}]},
+    options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,ticks:{callback:v=>v+'kg',font:{size:10},color:chartOpts.text},grid:{color:chartOpts.grid}},y:{ticks:{font:{size:10},color:'#d7c2c0'},grid:{display:false}}}}
+  });
+}
+
+function renderEmotionChart(data) {
+  const emojiMap = {positive:'😊 Happy', neutral:'😐 Neutral', negative:'😟 Stressed'};
+  const colorMap = {positive:'#4ade80', neutral:'#9ecede', negative:'#ffb4ab'};
+  const labels   = Object.keys(data).map(k => emojiMap[k] || k);
+  const values   = Object.values(data).map(v => v.total);
+  const colors   = Object.keys(data).map(k => colorMap[k] || '#6b7280');
+
+  if (emotionChart) {
+    emotionChart.data.labels = labels;
+    emotionChart.data.datasets[0].data = values;
+    emotionChart.data.datasets[0].backgroundColor = colors;
+    emotionChart.update();
+  } else {
+    emotionChart = new Chart(document.getElementById('emotionChart'), {
+      type:'doughnut',
+      data:{labels, datasets:[{data:values, backgroundColor:colors, borderWidth:0}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:11},color:'#d7c2c0',padding:10,boxWidth:10}},tooltip:{callbacks:{label:c=>` $${fmt(c.raw)}`}}}}
+    });
+  }
+
+  // Emotion breakdown text
+  const bd = document.getElementById('emotion-breakdown');
+  bd.innerHTML = Object.entries(data).map(([em, v]) => `
+    <div class="flex items-center justify-between p-3 bg-surface-container-high rounded-xl">
+      <div class="flex items-center gap-2">
+        <span class="text-lg">${em==='positive'?'😊':em==='negative'?'😟':'😐'}</span>
+        <div>
+          <div class="text-[13px] font-semibold text-on-surface capitalize">${em}</div>
+          <div class="text-[11px] text-on-surface-variant">Top: ${v.top_category}</div>
+        </div>
+      </div>
+      <div class="text-right">
+        <div class="text-[14px] font-bold text-on-surface">$${fmt(v.total)}</div>
+        <div class="text-[11px] text-on-surface-variant">${v.count} txns</div>
+      </div>
+    </div>`).join('');
+}
+
+async function generateReport() {
+  const month = document.getElementById('ana-month').value || CUR_MONTH;
+  const btn   = document.getElementById('gen-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin"></span> Generating...';
+  try {
+    const r = await api(`/api/summary/${month}?force=true`);
+    document.getElementById('report-text').textContent = r.summary_text;
+    document.getElementById('report-card').classList.remove('hidden');
+  } catch(_) { toast('Report failed', 'error'); }
+  finally { btn.disabled=false; btn.innerHTML='✨ AI Report'; }
+}
+
+async function loadAnomalies() {
+  document.getElementById('anomaly-list').innerHTML = '<div class="text-sm text-on-surface-variant"><span class="spin"></span> Analysing...</div>';
+  try {
+    const r = await api('/api/anomalies');
+    document.getElementById('anomaly-summary').textContent = r.summary || '';
+    const list = r.anomalies || [];
+    if (!list.length) {
+      document.getElementById('anomaly-list').innerHTML = '<div class="text-sm text-eco p-3 bg-eco/10 rounded-xl">✅ No anomalies detected. Spending looks normal!</div>';
+      return;
+    }
+    document.getElementById('anomaly-list').innerHTML = list.map(a => `
+      <div class="flex items-start gap-3 p-3 bg-surface-container-high rounded-xl border border-surface-variant">
+        <span class="badge-${a.severity} text-[11px] font-bold px-2 py-1 rounded-full shrink-0 mt-0.5">${a.severity.toUpperCase()}</span>
+        <div>
+          <div class="text-[13px] font-semibold text-on-surface">${esc(a.category)}</div>
+          <div class="text-[12px] text-on-surface-variant mt-0.5">${esc(a.message)}</div>
+        </div>
+      </div>`).join('');
+  } catch(_) { toast('Anomaly analysis failed', 'error'); }
+}
+
+function doExportCSV() {
+  window.location.href = `/api/export/csv?month=${document.getElementById('ana-month').value || CUR_MONTH}`;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  HISTORY
+// ═══════════════════════════════════════════════════════════════════════════════
+let activeFilter = 'all';
+
+function buildFilterChips() {
+  const c   = document.getElementById('filter-cats');
+  const top = ['Restaurant','Groceries','Cafe & Drinks','Public Transport','Fashion','Entertainment','Electronics','Healthcare','Education','Flight'];
+  c.innerHTML = `<button class="shrink-0 px-4 py-2 rounded-full text-sm font-semibold border border-primary bg-primary/10 text-primary transition-colors" data-cat="all" onclick="setCatFilter(this)">All</button>`
+    + top.map(cat => `<button class="shrink-0 px-4 py-2 rounded-full text-sm font-semibold border border-surface-variant text-on-surface-variant hover:border-outline transition-colors" data-cat="${cat}" onclick="setCatFilter(this)">${CATS[cat]||''} ${cat}</button>`).join('');
+}
+
+function setCatFilter(el) {
+  document.querySelectorAll('#filter-cats button').forEach(b => { b.className='shrink-0 px-4 py-2 rounded-full text-sm font-semibold border border-surface-variant text-on-surface-variant hover:border-outline transition-colors'; });
+  el.className = 'shrink-0 px-4 py-2 rounded-full text-sm font-semibold border border-primary bg-primary/10 text-primary transition-colors';
+  activeFilter = el.dataset.cat;
+  doSearch();
+}
+
+function clearFilters() {
+  document.getElementById('h-q').value = '';
+  document.getElementById('hist-month').value = '';
+  setCatFilter(document.querySelector('#filter-cats button'));
+}
+
+function debouncedSearch() { clearTimeout(searchTimer); searchTimer = setTimeout(doSearch, 280); }
+
+async function doSearch() {
+  const q     = document.getElementById('h-q').value;
+  const month = document.getElementById('hist-month').value;
+  const cat   = activeFilter;
+  const p     = new URLSearchParams({q, category: cat});
+  if (month) p.set('month', month);
+  try {
+    const exps = await api(`/api/expenses/search?${p}`);
+    const c    = document.getElementById('h-list');
+    document.getElementById('h-count').textContent = `${exps.length} transaction${exps.length!==1?'s':''}`;
+    if (!exps.length) { c.innerHTML='<div class="text-center py-8 text-on-surface-variant"><div class="text-3xl mb-2 opacity-40">🔍</div>No transactions found</div>'; return; }
+    c.innerHTML = exps.map(txCardDeletable).join('');
+  } catch(e) { console.error(e); }
+}
+
+function txCardDeletable(e) {
+  const icon = CATS[e.category] || '📦';
+  const cd   = carbonDotClass(e.carbon_kg);
+  const ctx  = e.context_tag ? `<span class="ml-1 text-[10px] px-1.5 py-0.5 rounded-full bg-surface-container border border-surface-variant">${esc(e.context_tag)}</span>` : '';
+  return `<div class="flex items-center justify-between p-4 bg-surface-container-highest rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.2)] hover:bg-surface-bright transition-colors" id="tx-${e.id}">
+    <div class="flex items-center gap-3 min-w-0">
+      <div class="w-10 h-10 rounded-full bg-surface-container-low flex items-center justify-center text-[16px] border border-surface-variant shrink-0">${icon}</div>
+      <div class="flex flex-col min-w-0">
+        <span class="text-[14px] text-on-surface font-semibold truncate">${esc(e.description || e.category)}</span>
+        <span class="text-[12px] text-on-surface-variant flex items-center flex-wrap gap-1">${e.date} · ${e.emotion==='positive'?'😊':e.emotion==='negative'?'😟':'😐'}${ctx}</span>
+      </div>
+    </div>
+    <div class="flex items-center gap-3 shrink-0 ml-2">
+      <div class="text-right">
+        <div class="font-headline-md text-[15px] text-on-surface">-$${fmt(e.amount)}</div>
+        <div class="flex items-center gap-1 justify-end text-[11px] text-on-surface-variant"><span class="c-dot ${cd}"></span>${e.carbon_kg.toFixed(2)}kg</div>
+      </div>
+      <button onclick="deleteTx(${e.id})" class="text-error hover:bg-error/10 p-2 rounded-full transition-colors" title="Delete">
+        <span class="material-symbols-outlined text-[18px]">delete</span>
+      </button>
+    </div>
+  </div>`;
+}
+
+async function deleteTx(id) {
+  const el = document.getElementById('tx-' + id);
+  if (!el) return;
+  el.style.opacity = '0';
+  el.style.transform = 'translateX(-16px)';
+  await new Promise(r => setTimeout(r, 250));
+  try {
+    await api(`/api/expenses/${id}`, {method:'DELETE'});
+    el.remove();
+    toast('Deleted', 'success');
+  } catch(_) {
+    el.style.opacity = '1';
+    el.style.transform = 'none';
+    toast('Delete failed', 'error');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  ECO SCREEN
+// ═══════════════════════════════════════════════════════════════════════════════
+async function loadEcoScreen() {
+  try {
+    const [eco, carbon] = await Promise.all([
+      api('/api/carbon/eco-score'),
+      api('/api/carbon/summary'),
+    ]);
+    updateEarth(eco);
+    document.getElementById('eco-today').textContent    = carbon.total_today.toFixed(1);
+    document.getElementById('eco-week').textContent     = carbon.total_week.toFixed(1);
+    document.getElementById('eco-month').textContent    = carbon.total_month.toFixed(1);
+    document.getElementById('eco-rank-emoji').textContent = eco.rank_emoji;
+    document.getElementById('eco-rank-name').textContent  = eco.rank;
+    document.getElementById('eco-rank-pts').textContent   = eco.eco_score + ' pts';
+
+    if (eco.next_rank_at) {
+      document.getElementById('rank-fill').style.width = Math.min(100, eco.eco_score / eco.next_rank_at * 100) + '%';
+      document.getElementById('rank-progress-lbl').textContent = `${eco.eco_score} / ${eco.next_rank_at} pts to next rank`;
+    } else {
+      document.getElementById('rank-fill').style.width = '100%';
+      document.getElementById('rank-progress-lbl').textContent = 'Max rank achieved! 🌍';
+    }
+
+    loadBudgetManager();
+  } catch(e) { console.error(e); }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  BUDGET MANAGER (NEW)
+// ═══════════════════════════════════════════════════════════════════════════════
+function populateBudgetCatSelect() {
+  const sel = document.getElementById('budget-cat-select');
+  if (!sel) return;
+  sel.innerHTML = Object.keys(CATS).map(cat =>
+    `<option value="${cat}">${CATS[cat]} ${cat}</option>`
+  ).join('');
+}
+
+function toggleBudgetForm(forceState) {
+  const form = document.getElementById('budget-form');
+  const show = forceState !== undefined ? forceState : form.style.display === 'none';
+  form.style.display = show ? 'block' : 'none';
+  if (show) document.getElementById('budget-limit-input').focus();
+}
+
+async function saveBudget() {
+  const cat   = document.getElementById('budget-cat-select').value;
+  const limit = parseFloat(document.getElementById('budget-limit-input').value);
+  if (!cat || !limit || limit <= 0) { toast('Enter a valid category and limit', 'warn'); return; }
+  try {
+    await api('/api/budgets', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({category: cat, monthly_limit: limit})
+    });
+    toast('Budget saved!', 'success');
+    toggleBudgetForm(false);
+    document.getElementById('budget-limit-input').value = '';
+    loadBudgetManager();
+    loadDashboard();
+  } catch(_) { toast('Save failed', 'error'); }
+}
+
+async function deleteBudget(id) {
+  try {
+    await api(`/api/budgets/${id}`, {method:'DELETE'});
+    toast('Budget removed', 'success');
+    loadBudgetManager();
+    loadDashboard();
+  } catch(_) { toast('Delete failed', 'error'); }
+}
+
+async function loadBudgetManager() {
+  const month   = CUR_MONTH;
+  const budgets = await api(`/api/budgets?month=${month}`);
+  const list    = document.getElementById('budget-mgr-list');
+
+  if (!budgets.length) {
+    list.innerHTML = '<div class="text-sm text-on-surface-variant text-center py-4">No budgets set. Add one above!</div>';
+    return;
+  }
+
+  list.innerHTML = budgets.map(b => {
+    const pct  = Math.min(b.percentage, 100);
+    const clr  = b.percentage > 90 ? '#ffb4ab' : b.percentage > 70 ? '#e8d284' : '#c0ceab';
+    const icon = CATS[b.category] || '📦';
+    return `<div class="budget-row">
+      <span class="text-xl shrink-0">${icon}</span>
+      <div class="flex-1 min-w-0">
+        <div class="flex justify-between items-center mb-1">
+          <span class="text-[14px] font-semibold text-on-surface truncate">${esc(b.category)}</span>
+          <span class="text-[12px] text-on-surface-variant shrink-0 ml-2">$${fmt(b.spent)} / $${fmt(b.monthly_limit)}</span>
+        </div>
+        <div class="h-2 bg-surface-container-lowest rounded-full overflow-hidden">
+          <div class="h-full rounded-full transition-all duration-500" style="width:${pct}%;background:${clr}"></div>
+        </div>
+        <div class="text-[11px] mt-1" style="color:${clr}">${b.percentage > 100 ? '⚠️ Over budget' : b.percentage.toFixed(0) + '% used'}</div>
+      </div>
+      <button onclick="deleteBudget(${b.id})" class="text-error hover:bg-error/10 p-2 rounded-full transition-colors shrink-0" title="Remove">
+        <span class="material-symbols-outlined text-[16px]">delete</span>
+      </button>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  ADD TRANSACTION SHEET
+// ═══════════════════════════════════════════════════════════════════════════════
+function buildCatGrid() {
+  document.getElementById('cat-grid').innerHTML = Object.entries(CATS).map(([name, icon]) =>
+    `<button class="cat-btn ${name===selectedCat?'selected':''}" data-cat="${name}" onclick="selectCat(this)">
+      <span class="cat-emoji">${icon}</span>${name}
+    </button>`
+  ).join('');
+}
+
+function selectCat(el) {
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedCat = el.dataset.cat;
+  updateCarbonEst();
+}
+
+function setEmotion(el) {
+  document.querySelectorAll('.mood-chip').forEach(b => {
+    b.className = 'mood-chip px-4 py-2 rounded-full text-sm font-semibold border border-surface-variant text-on-surface-variant transition-colors';
+  });
+  el.className = 'mood-chip active px-4 py-2 rounded-full text-sm font-semibold border border-primary bg-primary/10 text-primary transition-colors';
+  selectedEmotion = el.dataset.em;
+}
+
+function setCtxTag(el) {
+  document.querySelectorAll('.ctx-chip').forEach(b => {
+    b.className = 'ctx-chip px-3 py-1.5 rounded-full text-[12px] font-semibold border border-surface-variant text-on-surface-variant hover:border-outline transition-colors';
+  });
+  el.className = 'ctx-chip px-3 py-1.5 rounded-full text-[12px] font-semibold border border-primary bg-primary/10 text-primary transition-colors';
+  selectedCtx = el.dataset.ctx;
+}
+
+function updateCarbonEst() {
+  const amount = parseFloat(document.getElementById('add-amount').value) || 0;
+  let carbon = selectedCat === 'Electricity'
+    ? (amount / 3.5) * 0.495
+    : amount * (CARBON_FACTORS[selectedCat] || 0.04);
+  document.getElementById('est-val').textContent = carbon.toFixed(2);
+  const box = document.getElementById('carbon-est');
+  if (carbon < .5)       { box.style.background='rgba(74,222,128,.08)'; box.style.borderColor='rgba(74,222,128,.2)';  box.style.color='#4ade80'; }
+  else if (carbon < 2)   { box.style.background='rgba(251,191,36,.08)'; box.style.borderColor='rgba(251,191,36,.2)';  box.style.color='#fbbf24'; }
+  else if (carbon < 10)  { box.style.background='rgba(251,146,60,.08)'; box.style.borderColor='rgba(251,146,60,.2)';  box.style.color='#fb923c'; }
+  else                   { box.style.background='rgba(255,180,171,.08)';box.style.borderColor='rgba(255,180,171,.2)'; box.style.color='#ffb4ab'; }
+}
+
+function openAddSheet() {
+  document.getElementById('sheet-overlay').classList.add('open');
+  document.getElementById('add-sheet').classList.add('open');
+  document.getElementById('add-date').value = TODAY;
+}
+
+function closeAddSheet() {
+  document.getElementById('sheet-overlay').classList.remove('open');
+  document.getElementById('add-sheet').classList.remove('open');
+}
+
+async function doParse() {
+  const text = document.getElementById('nlp-text').value.trim();
+  if (!text) { toast('Type a description first', 'warn'); return; }
+  const btn = document.getElementById('parse-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin"></span> Parsing...';
+  try {
+    const r = await api('/api/parse', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({text})});
+    if (r.amount)      document.getElementById('add-amount').value = r.amount;
+    if (r.category) {
+      selectedCat = r.category;
+      document.querySelectorAll('.cat-btn').forEach(b => b.classList.toggle('selected', b.dataset.cat === selectedCat));
+    }
+    if (r.date)        document.getElementById('add-date').value  = r.date;
+    if (r.description) document.getElementById('add-note').value  = r.description;
+    if (r.emotion) {
+      selectedEmotion = r.emotion;
+      document.querySelectorAll('.mood-chip').forEach(b => {
+        const active = b.dataset.em === r.emotion;
+        b.className = 'mood-chip px-4 py-2 rounded-full text-sm font-semibold border transition-colors '
+          + (active ? 'active border-primary bg-primary/10 text-primary' : 'border-surface-variant text-on-surface-variant');
+      });
+    }
+    updateCarbonEst();
+    toast('Parsed!', 'success');
+  } catch(_) { toast('Parse failed', 'error'); }
+  finally { btn.disabled=false; btn.innerHTML='✨ Parse with AI'; }
+}
+
+async function saveTransaction() {
+  const amount = parseFloat(document.getElementById('add-amount').value);
+  if (!amount || amount <= 0) { toast('Enter a valid amount', 'warn'); return; }
+  const data = {
+    amount,
+    category:    selectedCat,
+    date:        document.getElementById('add-date').value || TODAY,
+    description: document.getElementById('add-note').value || selectedCat,
+    emotion:     selectedEmotion,
+    context_tag: selectedCtx !== 'none' ? selectedCtx : null,
+  };
+  try {
+    const saved = await api('/api/expenses', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
+    if (saved.carbon_kg < .05)  showEcoPop('+🌿 eco point!', '#4ade80');
+    else if (saved.carbon_kg > 2) showEcoPop('🌫️ ' + saved.carbon_kg.toFixed(1) + ' kg CO₂e', '#fb923c');
+    toast('Transaction saved!', 'success');
+    closeAddSheet();
+    resetAddForm();
+    loadDashboard();
+  } catch(_) { toast('Save failed', 'error'); }
+}
+
+function resetAddForm() {
+  document.getElementById('nlp-text').value  = '';
+  document.getElementById('add-amount').value = '';
+  document.getElementById('add-note').value  = '';
+  document.getElementById('add-date').value  = TODAY;
+  selectedCat     = 'Restaurant';
+  selectedEmotion = 'neutral';
+  selectedCtx     = 'none';
+  buildCatGrid();
+  document.querySelectorAll('.mood-chip').forEach(b => {
+    const n = b.dataset.em === 'neutral';
+    b.className = 'mood-chip px-4 py-2 rounded-full text-sm font-semibold border transition-colors '
+      + (n ? 'active border-primary bg-primary/10 text-primary' : 'border-surface-variant text-on-surface-variant');
+  });
+  document.querySelectorAll('.ctx-chip').forEach(b => {
+    const n = b.dataset.ctx === 'none';
+    b.className = 'ctx-chip px-3 py-1.5 rounded-full text-[12px] font-semibold border transition-colors '
+      + (n ? 'border-primary bg-primary/10 text-primary' : 'border-surface-variant text-on-surface-variant hover:border-outline');
+  });
+  updateCarbonEst();
+}
+
+// ── Income Setting ─────────────────────────────────────────────────────────────
+function toggleIncomeEdit() {
+  const ed = document.getElementById('income-editor');
+  const showing = ed.style.display !== 'none';
+  ed.style.display = showing ? 'none' : 'flex';
+  if (!showing) document.getElementById('income-input').focus();
+}
+
+async function saveIncome() {
+  const val = parseFloat(document.getElementById('income-input').value);
+  if (!val || val < 0) { toast('Enter a valid amount', 'warn'); return; }
+  try {
+    await api('/api/settings/income', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({monthly_income: val})});
+    toast('Income updated!', 'success');
+    toggleIncomeEdit();
+    loadDashboard();
+  } catch(_) { toast('Save failed', 'error'); }
+}
+
+// ── AI Dashboard Analysis ─────────────────────────────────────────────────────
+async function runAiAnalysis() {
+  const month = document.getElementById('dash-month').value || CUR_MONTH;
+  const btn   = document.getElementById('ai-analysis-btn');
+
+  // Show loading state
+  document.getElementById('ai-analysis-idle').style.display   = 'none';
+  document.getElementById('ai-analysis-result').style.display = 'none';
+  document.getElementById('ai-analysis-loading').style.display = 'block';
+  btn.disabled = true;
+
+  const loadingMsgs = [
+    'AI 正在分析你的消費資料...',
+    '計算各類別佔比中...',
+    '評估碳足跡影響...',
+    '生成個人化建議...',
+  ];
+  let msgIdx = 0;
+  const msgEl   = document.getElementById('ai-loading-msg');
+  const msgTimer = setInterval(() => {
+    msgIdx = (msgIdx + 1) % loadingMsgs.length;
+    msgEl.textContent = loadingMsgs[msgIdx];
+  }, 1200);
+
+  try {
+    const r = await api(`/api/ai-analysis?month=${month}`);
+    clearInterval(msgTimer);
+
+    if (r.error) {
+      toast('這個月還沒有消費記錄', 'warn');
+      document.getElementById('ai-analysis-idle').style.display   = 'block';
+      document.getElementById('ai-analysis-loading').style.display = 'none';
+      return;
+    }
+
+    const st = r.stats;
+
+    // Analysis text
+    document.getElementById('ai-analysis-text').textContent = r.analysis;
+
+    // AI badge visibility
+    document.getElementById('ai-powered-badge').style.display = r.ai_powered ? 'flex' : 'none';
+
+    // Quick stats grid (4 tiles)
+    const savingsColor = (st.savings ?? 0) >= 0 ? '#dceac5' : '#ffb4ab';
+    document.getElementById('ai-stats-grid').innerHTML = [
+      { label: 'TOTAL SPENT',  val: `$${Number(st.total).toLocaleString()}`,       color: '#ffdddb' },
+      { label: 'TRANSACTIONS', val: st.count,                                       color: '#9ecede' },
+      { label: 'AVG / DAY',    val: `$${Number(st.avg_daily).toLocaleString()}`,    color: '#dceac5' },
+      { label: st.savings != null ? 'SAVINGS' : 'CO₂e',
+        val:   st.savings != null ? `$${Number(st.savings).toLocaleString()}` : `${st.total_carbon}kg`,
+        color: st.savings != null ? savingsColor : '#4ade80' },
+    ].map(t => `
+      <div class="bg-surface-container-high rounded-xl p-3 text-center border border-surface-variant">
+        <div class="font-headline-md text-[16px] font-bold" style="color:${t.color}">${esc(String(t.val))}</div>
+        <div class="font-label-lg text-[9px] text-on-surface-variant mt-1">${t.label}</div>
+      </div>`).join('');
+
+    // Category breakdown bars (top 5)
+    const topCats = Object.entries(st.by_category).slice(0, 5);
+    document.getElementById('ai-cat-breakdown').innerHTML =
+      `<div class="text-[11px] font-bold text-on-surface-variant uppercase mb-1">Top Categories</div>` +
+      topCats.map(([cat, v]) => {
+        const clr = CAT_COLORS[cat] || '#6b7280';
+        const icon = CATS[cat] || '📦';
+        return `<div class="flex items-center gap-2">
+          <span class="text-[13px] shrink-0">${icon}</span>
+          <div class="flex-1 min-w-0">
+            <div class="flex justify-between text-[11px] mb-0.5">
+              <span class="text-on-surface-variant truncate">${esc(cat)}</span>
+              <span class="text-on-surface font-semibold shrink-0 ml-1">${v.pct}%</span>
+            </div>
+            <div class="h-1.5 bg-surface-container-lowest rounded-full overflow-hidden">
+              <div class="h-full rounded-full transition-all duration-700" style="width:${v.pct}%;background:${clr}"></div>
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+
+    // Switch to result
+    document.getElementById('ai-analysis-loading').style.display = 'none';
+    document.getElementById('ai-analysis-result').style.display  = 'block';
+
+  } catch (err) {
+    clearInterval(msgTimer);
+    toast('AI 分析失敗，請稍後再試', 'error');
+    document.getElementById('ai-analysis-loading').style.display = 'none';
+    document.getElementById('ai-analysis-idle').style.display    = 'block';
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// ── Seed / Demo ───────────────────────────────────────────────────────────────
+async function loadSeed() {
+  if (!confirm('Load 20 demo transactions for May 2026?')) return;
+  try {
+    const r = await api('/api/seed');
+    toast(`Demo loaded — ${r.expenses} transactions`, 'success');
+    loadDashboard();
+  } catch(_) { toast('Seed failed', 'error'); }
+}
+</script>
+</body>
+</html>
